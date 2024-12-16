@@ -3,11 +3,11 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const mongo = require('mongodb');
-const mongoose = require('mongoose');
+const {mongoose }= require('mongoose');
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoDbURI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoDbURI);
 mongoose.connection.on('connected', () => console.log('connected'));
 
 app.use(cors());
@@ -27,8 +27,8 @@ let exercSesSchema = new mongoose.Schema({
 });
 
 let usSchema = new mongoose.Schema({
-  username: String }
-);
+  username: { type: String, required: true }
+});
 
 let Session = mongoose.model( "Session", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
