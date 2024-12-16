@@ -7,7 +7,8 @@ const mongoose= require('mongoose');
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoDbURI);
+// mongoose.connect(mongoDbURI);
+mongoose.connect(mongoDbURI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS:5000 });
 mongoose.connection.on('connected', () => console.log('connected'));
 
 app.use(cors());
