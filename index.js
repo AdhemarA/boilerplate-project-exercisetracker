@@ -62,69 +62,75 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-
-=====================================================
-
 app.post("/api/users/:_id/exercises", async(req, res) =>{
   try {
-    const user = await User.findById(req.body[":_id"] || req.params._id)
-    if (!user) return res.json({error:"user doesn't exist"})
-    const newExercise = await Exercise.create({
+    const user = await User.findById(req.body[":_id"] || req.params._id);
+    if (!user){
+       return res.json({error:"user doesn't exist"});
+    }else{  
+    const newExerc = await Exerc.create({
       username:user.username,
       description:req.body.description,
       duration: req.body.duration, 
-      date: (req.body.date)? new Date(req.body.date) : new Date(),
-      })
+      date: (req.body.date)? new Date(req.body.date) : new Date()
+      });
+    };  
 
     return res.json({
       _id:user._id,
       username:user.username,
-      date: newExercise.date.toDateString(),
-      duration: newExercise.duration,
-      description:newExercise.description,
-
-    })
+      date: newExerc.date.toDateString(),
+      duration: newExerc.duration,
+      description:newExerc.description,
+    });
   } catch (error) {
-    console.error(error)
-    return res.json({error:"Operation failed"})
-  }
-})
-
-
-
-===========================================================
-
-app.get( "/api/users/:_id/logs?", async (req, res) => {
-  const{ from, to, limit } = req.query;
-  const id = req.params._id;
-  const user = await User.findById(id);
-  if( !user){
-    res.send( "User not find");
-    return;
+    console.error(error);
+    return res.json({error:"Operation failed"});
   };
-  let dateObj = {};  
-  if( from){
-    dateObj[ "$gto"] = new Date( from);
+});
+
+app.get("/api/users/:_id/logs", async(req, res)=>{
+  try {
+    let result = {};
+    let consult = {};
+    let from = null;
+    let to = null;
+
+    const userl = await User.findById(req.params._id);
+
+    consult.username = userl.username;
+    result._id = userl._id;
+    result.username = userl.username;
+
+    if (req.query.from){
+      from = new Date (req.query.from + "T00:00:00.000-06:00"); 
+      consult.date = {...consult.date, $gte:from};
+      result.from = from.toDateString();
+     };
+
+    if (req.query.to){
+      to = new Date (req.query.to+"T00:00:00.000-06:00");
+      consult.date = {...consult.date, $lte:to};
+      result.to = to.toDateString();
+     };
+    
+    const log = await Exerc.find(consult).limit(parseInt(req.query.limit)).select({_id:0, username:0, __v:0});
+
+    let resulLog = [];
+
+    for(let entry of log){
+      resulLog.push({description:entry.description, duration:entry.duration, date:entry.date.toDateString()});
+    }
+
+    result.count = log.length;
+    result.log = resulLog;
+    return res.json(result);
+
+  } catch (error) {
+    console.error(error);
+    return res.json({error:"Operation failed"});
   };
-  if( to){
-    dateObj[ "$lto"] = new Date( to);
-  };
-  let filter ={ user_id : id};
-  if( from || to){
-    filter.date = dateObj;
-  }
-  const exercises = await Exerc.find(filter).limit(-limit ?? 500);
-  const log = exercises.map( e=> ({
-    description: e.description,
-    duration: e.duration,
-    date: (e.date).toDateString() 
-  }))
-  res.json({ 
-    username: user.username,
-    count: exercises.length,
-    _id: user._id,
-    log
-  })
+
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
