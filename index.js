@@ -73,7 +73,7 @@ app.post("/api/users/:_id/exercises", async(req, res) =>{
       username:user.username,
       description:req.body.description,
       duration: req.body.duration, 
-      date: (req.body.date)? new Date(req.body.date) : new Date()
+      date: (req.body.date)? new Date(req.body.date) : new Date(),
       _id : req.body._id
       });
     };  
