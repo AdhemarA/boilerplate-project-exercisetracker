@@ -24,14 +24,14 @@ const listener = app.listen(process.env.PORT || 3000, () => {
 let exercSesSchema = new mongoose.Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
-  date: String,
+  date: { type: String,required:false },
 });
 
 let usSchema = new mongoose.Schema({
   username: { type: String, required: true }
 });
 
-let Session = mongoose.model( "Session", exercSesSchema);
+let Exerc = mongoose.model( "Exerc", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
 
 app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{
@@ -64,7 +64,7 @@ app.get( "/api/users", (req, res) => {
     if( !user){
       res.send( "User not find");
     } else{
-      const exercNew = new Session({
+      const exercNew = new Exerc({
         usId: user._id,
         description,
         duration,
@@ -84,27 +84,25 @@ app.get( "/api/users", (req, res) => {
   };
   });*/
   app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
-    let newSess = new Session({
+    let newExerc = new Exerc({
       description: req.body.description,
       duration: parseInt( req.body.duration),
       date: req.body.date
     });
-    if(newSess.date ===""){
-      newSess.date = new Date().toDateString().substring(0, 10);
+    if(newExerc.date ===""){
+      newExerc.date = new Date().toDateString().substring(0, 10);
     };
     User.findByIdAndUpdate(req.body._id,
-      {$push: {log: newSess}},
       {new:true},
       (error,updUser) => {
         if(!error){
-        let respObj = {};
-        respObj["_id"]=updUser._id;;
-        respObj["username"]=updUser.username;
-        respObj["date"]=new Date(newSess.date).toDateString();
-        respObj["description"]=newSess.description;
-        respObj["duration"]=newSess.duration;
-        res.json( respObj );
-      };
+          let respObj = {};
+          respObj["_id"]=updUser._id;;
+          respObj["username"]=updUser.username;
+          respObj["date"]=new Date(newExerc.date).toDateString();
+          respObj["description"]=newExerc.description;
+          respObj["duration"]=newExerc.duration;
+          res.json( respObj );
     }); 
   });
   
@@ -127,7 +125,7 @@ app.get( "/api/users/:_id/logs?", async (req, res) => {
   if( from || to){
     filter.date = dateObj;
   }
-  const exercises = await Session.find(filter).limit(-limit ?? 500);
+  const exercises = await Exerc.find(filter).limit(-limit ?? 500);
   const log = exercises.map( e=> ({
     description: e.description,
     duration: e.duration,
