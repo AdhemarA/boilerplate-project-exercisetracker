@@ -28,7 +28,7 @@ let exercSesSchema = new mongoose.Schema({
 });
 
 let usSchema = new mongoose.Schema({
-  username: String },
+  username: String }
 );
 
 let Session = mongoose.model( "Session", exercSesSchema);
