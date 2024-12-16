@@ -42,7 +42,7 @@ app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{
       let respObj = {};
       respObj["username"]= savedUser.username;
       respObj["_id"]= savedUser._id;
-      respObj.json( respObj);
+      res.json( respObj);
     }
   })
 });
