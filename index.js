@@ -13,6 +13,7 @@ mongoose.connection.on('connected', () => console.log('connected'));
 
 app.use(cors());
 app.use(express.static('public'));
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
@@ -33,6 +34,39 @@ let usSchema = new mongoose.Schema({
 
 let Exerc = mongoose.model( "Exerc", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
+
+exerciseForm.addEventListener("submit", ( event ) => {
+  event.preventDefault();
+  const exerciseForm = document.getElementById("exercise-form");
+  const userId = document.getElementById("uid").value;
+  const description = document.getElementById("desc").value;
+  const duration = document.getElementById("dur").value;
+  const date = document.getElementById("date").value;
+//  exerciseForm.action = `/api/users/${userId}/exercises`;
+  app.post( `/api/users/${userId}/exercises`, bodyParser.urlencoded({extended:false}), (req, res) => {
+    let newExerc = new Exerc({
+      description: description,
+      duration: parseInt( duration),
+      date: date
+    });
+    if(newExerc.date ===""){
+      newExerc.date = new Date().toDateString().substring(0, 10);
+    };
+    User.findByIdAndUpdate(userId,
+      {new:true},
+      (error,updUser) => {
+        if(!error){
+          let respObj = {};
+          respObj["username"]=newExerc.username;
+          respObj["date"]=new Date(newExerc.date).toDateString();
+          respObj["description"]=newExerc.description;
+          respObj["duration"]=newExerc.duration;
+          res.json( respObj );
+      };
+    }); 
+  });
+//  exerciseForm.submit();
+});
 
 app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{
 // app.post( "/api/users", async (req, res) =>{ 
@@ -82,7 +116,7 @@ app.get( "/api/users", (req, res) => {
     console.log( err);
     res.send( "Error saving exercise");
   };
-  });*/
+  });
   app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
     let newExerc = new Exerc({
       description: req.body.description,
@@ -105,7 +139,7 @@ app.get( "/api/users", (req, res) => {
           res.json( respObj );
       };
     }); 
-  });
+  });*/
   
 app.get( "/api/users/:_id/logs?", async (req, res) => {
   const{ from, to, limit } = req.query;
