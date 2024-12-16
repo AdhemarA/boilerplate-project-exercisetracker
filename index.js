@@ -8,21 +8,28 @@ const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 // mongoose.connect(mongoDbURI);
+// mongoose.set('useFindAndModify', false);
+
 mongoose.connect(mongoDbURI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS:5000 });
 mongoose.connection.on('connected', () => console.log('connected'));
 
 app.use(cors());
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({extended:false}));
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-const listener = app.listen(process.env.PORT || 3000, () => {
-  console.log('Your app is listening on port ' + listener.address().port)
-});
+
+/*=====================================================
+
+
+
+===========================================================*/
 
 let exercSesSchema = new mongoose.Schema({
+  username: {type: String, required:true},
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: { type: String,required:false },
@@ -34,39 +41,6 @@ let usSchema = new mongoose.Schema({
 
 let Exerc = mongoose.model( "Exerc", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
-const exerciseForm = document.getElementById("exercise-form")
-
-exerciseForm.addEventListener("submit", ( event ) => {
-  event.preventDefault();
-  const userId = document.getElementById("uid").value;
-  const description = document.getElementById("desc").value;
-  const duration = document.getElementById("dur").value;
-  const date = document.getElementById("date").value;
-//  exerciseForm.action = `/api/users/${userId}/exercises`;
-  app.post( `/api/users/${userId}/exercises`, bodyParser.urlencoded({extended:false}), (req, res) => {
-    let newExerc = new Exerc({
-      description: description,
-      duration: parseInt( duration),
-      date: date
-    });
-    if(newExerc.date ===""){
-      newExerc.date = new Date().toDateString().substring(0, 10);
-    };
-    User.findByIdAndUpdate(userId,
-      {new:true},
-      (error,updUser) => {
-        if(!error){
-          let respObj = {};
-          respObj["username"]=newExerc.username;
-          respObj["date"]=new Date(newExerc.date).toDateString();
-          respObj["description"]=newExerc.description;
-          respObj["duration"]=newExerc.duration;
-          res.json( respObj );
-      };
-    }); 
-  });
-//  exerciseForm.submit();
-});
 
 app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{
 // app.post( "/api/users", async (req, res) =>{ 
@@ -89,57 +63,30 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-/*app.post( "/api/users/:_id/exercises", async (req, res) => {
-  const usId = req.params._id;
-  const { description, duration, date} = req.body;
-
-  try{
-    const user = await User.findById(id );
-    if( !user){
-      res.send( "User not find");
-    } else{
-      const exercNew = new Exerc({
-        usId: user._id,
-        description,
-        duration,
-        date: date ? new Date( date) : new Date()});
-      const exerc = await exercNew.save();
-      res.json({
-        _id: user._id,
-       username: user.username,
-       description: exerc.description,
-       duration: exerc.duration,
-       date: new Date(exerc.date).toDateString()
-      });
-    };
-  } catch( err ){
-    console.log( err);
-    res.send( "Error saving exercise");
-  };
+app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
+  let newExerc = new Exerc({
+    description: req.body.description,
+    duration: parseInt( req.body.duration),
+    date: req.body.date
   });
-  app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
-    let newExerc = new Exerc({
-      description: req.body.description,
-      duration: parseInt( req.body.duration),
-      date: req.body.date
-    });
-    if(newExerc.date ===""){
-      newExerc.date = new Date().toDateString().substring(0, 10);
+  if(newExerc.date ===""){
+    newExerc.date = new Date().toDateString().substring(0, 10);
+  };
+  User.findByIdAndUpdate(req.body._id,
+    {new:true},
+    (error,updUser) => {
+      if(!error){
+        let respObj = {};
+        respObj["_id"]=updUser._id;;
+        respObj["username"]=updUser.username;
+        respObj["date"]=new Date(newExerc.date).toDateString();
+        respObj["description"]=newExerc.description;
+        respObj["duration"]=newExerc.duration;
+        res.json( respObj );
     };
-    User.findByIdAndUpdate(req.body._id,
-      {new:true},
-      (error,updUser) => {
-        if(!error){
-          let respObj = {};
-          respObj["_id"]=updUser._id;;
-          respObj["username"]=updUser.username;
-          respObj["date"]=new Date(newExerc.date).toDateString();
-          respObj["description"]=newExerc.description;
-          respObj["duration"]=newExerc.duration;
-          res.json( respObj );
-      };
-    }); 
-  });*/
+  }); 
+});
+
   
 app.get( "/api/users/:_id/logs?", async (req, res) => {
   const{ from, to, limit } = req.query;
@@ -172,4 +119,8 @@ app.get( "/api/users/:_id/logs?", async (req, res) => {
     _id: user._id,
     log
   })
+});
+
+const listener = app.listen(process.env.PORT || 3000, () => {
+  console.log('Your app is listening on port ' + listener.address().port)
 });
