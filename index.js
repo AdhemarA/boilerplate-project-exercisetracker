@@ -32,7 +32,7 @@ let exercSesSchema = new mongoose.Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: { type: String,required:false },
-  userId: {type: String, required:true}
+  _id: {type: String, required:true}
 });
 
 let usSchema = new mongoose.Schema({
@@ -64,29 +64,31 @@ app.get( "/api/users", (req, res) => {
 });
 
 app.post('/api/users/:_id/exercises', async (req, res) => {
-  const userId = req.params._id; 
+  const exeName = req.body.username;
+  const exeDescri =req.body.description;
+  const exeDurat = req.body.duration;
+  const exeDate = req.body.date;
+  const userId = req.body._id;
   
-  let { description, duration, date } = req.body; 
-
-  if (!date) {
-      date = (new Date(Date.now())).toDateString();
+  if (!exeDate) {
+      exeDate = (new Date(Date.now())).toDateString();
   } else {
-      const parts = date.split('-');
+      const parts = exeDate.split('-');
       const year = parseInt(parts[0]);
       const month = parseInt(parts[1]) - 1;
       const day = parseInt(parts[2]);
       const utcDate = new Date(Date.UTC(year, month, day));
-      date =  new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000).toDateString();
+      exeDate =  new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000).toDateString();
   };
 
   let theUser = await User.findById(userId); 
  
   const newExerc = new Exerc({
     username: theUser.username, 
-    description, 
-    duration: Number(duration),
-    date,
-    userId: userId, 
+    description: exeDescri, 
+    duration: Number(exeDurat),
+    date : exeDate,
+    _id: userId, 
   });
 
   await newExerc.save();
