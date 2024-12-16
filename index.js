@@ -28,24 +28,23 @@ let exercSesSchema = new Schema({
 });
 
 let usSchema = new Schema({
-  username: {type: String, required:true },
-  log: [exercSesSchema]
-});
+  username: String },
+);
 
 let Session = mongoose.model( "Session", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
 
 // app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (req, res) =>{
- app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{ 
+ app.post( "/api/users", async (req, res) =>{ 
   let newUser = new User({username: req.body.username});
-  newUser.save(( error, savUser ) => {
-    if(!error){
-      let respObj = {};
-      respObj["username"]=savUser.username;
-      respObj["_id"]=savUser.id;
-      res.json( respObj );
-    };
-  });
+  try{
+    const user = await newUser.save();
+    console.log(user);
+    res.json( user );
+
+  }catch(err){
+    console.log( err);
+  }
 });
 
 app.get( "/api/users", (req, res) => {
