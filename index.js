@@ -55,57 +55,65 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
-  let newSess = new Session({
-    description: req.body.description,
-    duration: parseInt( req.body.duration),
-    date: req.body.date
-  });
-  if(newSess.date ===""){
-    newSess.date = new Date().toDateString().substring(0, 10);
+app.post( "/api/users/:_id/exercises",  (req, res) => {
+  const usId = req.params._id;
+  const { description, duration, date} = req.body;
+
+  try{
+    const user = await User.findById(id );
+    if( !user){
+      res.send( "User not find");
+    } else{
+      const exercNew = new Sess({
+        usId: user._id,
+        description,
+        duration,
+        date: date ? new Date( date) : new Date()});
+      const exerc = await exercNew.save();
+      res.json({
+        _id: user._id,
+       username: user.username,
+       description: exerc.description,
+       duration: exerc.duration,
+       date: new Date(exerc.date).toDateString()
+      });
+    };
+  } catch( err ){
+    console.log( err);
+    res.send( "Error saving exercise");
   };
-  User.findByIdAndUpdate(req.body.id,
-    {$push: {log: newSess}},
-    {new:true},
-    (error,updUser) => {
-      if(!error){
-      let respObj = {};
-      respObj["_id"]=updUser.id;;
-      respObj["username"]=updUser.username;
-      respObj["date"]=new Date(newSess.date).toDateString();
-      respObj["description"]=newSess.description;
-      respObj["duration"]=newSess.duration;
-      res.json( respObj );
-    };
-  }); 
-});
-
-app.get( "/api/users/:_id/logs?", (req, res) => {
-  User.findById(req.query.userId, (error, result) =>{
-    if(!error){
-      let respObj = result;
-      if(req.query.limit){
-        respObj.log = respObj.log.slice(0, req.query.limit);
-      };
-      if( req.query.from || req.query.to){
-        let frDate = new Date(0);
-        let toDate = new Date();
-
-        if(req.query.from){
-          frDate = new Date(req.query.from);
-        };
-        if(req.query.to){
-          frDate = new Date(req.query.to);
-        };
-        frDate = frDate.getTime();
-        toDate = toDate.getTime();
-        respObj.log = respObj.log.filter((session) =>{
-          let sessDate = new Date( session.date).getTime();
-          return sessDate >= frDate && sessDate <= toDate;
-        });
-      };
-      respObj["cont"] = result.log.length;
-      respObj.json( respObj);
-    };
   });
+
+app.get( "/api/users/:_id/logs?", async (req, res) => {
+  const{ from, to, limit } = req.query;
+  const id = req.params._id;
+  const user = await User.findById(id);
+  if( !user){
+    res.send( "User not find");
+    return;
+  };
+  let dateObj = {};  
+  if( from){
+    dateObj[ "$gto"] = new Date( from);
+  };
+  if( to){
+    dateObj[ "$lto"] = new Date( to);
+  };
+  let filter ={ user_id : id};
+  if( from || to){
+    filter.date = dateObj;
+  }
+  const exercises = await Sess.find(filter).limit(.limit ?? 500);
+  const log = exercises.map( e=> ({
+    description: e.description,
+    duration: e.duration,
+    date: (e.date).toDateString() 
+  }))
+  res.json({ 
+    username: user.username,
+    count: exercises.length,
+    _id: user._id,
+    log
+  })
 });
+
