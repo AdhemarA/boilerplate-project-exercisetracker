@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoDbURI);
+mongoose.connect(mongoDbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.connection.on('connected', () => console.log('connected'));
 
 app.use(cors());
@@ -56,15 +56,15 @@ app.get( "/api/users", (req, res) => {
 });
 
 app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
-  let newSess = new sessionStorage({
+  let newSess = new Session({
     description: req.body.description,
-    duration: parseInt( req.body.druration),
+    duration: parseInt( req.body.duration),
     date: req.body.date
   });
   if(newSess.date ===""){
-    newSess.date = new Date().toISOString().substring(0, 10);
+    newSess.date = new Date().toDateString().substring(0, 10);
   };
-  User.findByIdAndUpdate(req.body.userId,
+  User.findByIdAndUpdate(req.body.id,
     {$push: {log: newSess}},
     {new:true},
     (error,updUser) => {
