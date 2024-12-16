@@ -17,16 +17,15 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended:false}));
 
+function logexe(req, res, next){
+  console.log(req.method, req.path, req.params, req.query, req.body);
+  next();
+}
+app.use(logexe);
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
-
-
-/*=====================================================
-
-
-
-===========================================================*/
 
 let exercSesSchema = new mongoose.Schema({
   username: {type: String, required:true},
@@ -63,31 +62,38 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
-  let newExerc = new Exerc({
-    description: req.body.description,
-    duration: parseInt( req.body.duration),
-    date: req.body.date
-  });
-  if(newExerc.date ===""){
-    newExerc.date = new Date().toDateString().substring(0, 10);
-  };
-  User.findByIdAndUpdate(req.body._id,
-    {new:true},
-    (error,updUser) => {
-      if(!error){
-        let respObj = {};
-        respObj["_id"]=updUser._id;;
-        respObj["username"]=updUser.username;
-        respObj["date"]=new Date(newExerc.date).toDateString();
-        respObj["description"]=newExerc.description;
-        respObj["duration"]=newExerc.duration;
-        res.json( respObj );
-    };
-  }); 
-});
 
-  
+=====================================================
+
+app.post("/api/users/:_id/exercises", async(req, res) =>{
+  try {
+    const user = await User.findById(req.body[":_id"] || req.params._id)
+    if (!user) return res.json({error:"user doesn't exist"})
+    const newExercise = await Exercise.create({
+      username:user.username,
+      description:req.body.description,
+      duration: req.body.duration, 
+      date: (req.body.date)? new Date(req.body.date) : new Date(),
+      })
+
+    return res.json({
+      _id:user._id,
+      username:user.username,
+      date: newExercise.date.toDateString(),
+      duration: newExercise.duration,
+      description:newExercise.description,
+
+    })
+  } catch (error) {
+    console.error(error)
+    return res.json({error:"Operation failed"})
+  }
+})
+
+
+
+===========================================================
+
 app.get( "/api/users/:_id/logs?", async (req, res) => {
   const{ from, to, limit } = req.query;
   const id = req.params._id;
