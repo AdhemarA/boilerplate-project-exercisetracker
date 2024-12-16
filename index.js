@@ -34,10 +34,10 @@ let usSchema = new mongoose.Schema({
 
 let Exerc = mongoose.model( "Exerc", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
+const exerciseForm = document.getElementById("exercise-form")
 
 exerciseForm.addEventListener("submit", ( event ) => {
   event.preventDefault();
-  const exerciseForm = document.getElementById("exercise-form");
   const userId = document.getElementById("uid").value;
   const description = document.getElementById("desc").value;
   const duration = document.getElementById("dur").value;
