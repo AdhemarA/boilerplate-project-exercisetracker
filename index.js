@@ -104,7 +104,7 @@ app.get( "/api/users", (req, res) => {
           respObj["duration"]=newExerc.duration;
           res.json( respObj );
       };
-    }; 
+    }); 
   });
   
 app.get( "/api/users/:_id/logs?", async (req, res) => {
