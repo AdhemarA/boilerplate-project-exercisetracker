@@ -63,44 +63,61 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post('/api/users/:_id/exercises', async (req, res) => {
-  const exeName = req.body.username;
-  const exeDescri =req.body.description;
-  const exeDurat = req.body.duration;
-  const exeDate = req.body.date;
-  const userId = req.body._id;
-  
-  if (!exeDate) {
-      exeDate = (new Date(Date.now())).toDateString();
-  } else {
-      const parts = exeDate.split('-');
-      const year = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1;
-      const day = parseInt(parts[2]);
-      const utcDate = new Date(Date.UTC(year, month, day));
-      exeDate =  new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000).toDateString();
+app.post("/api/users/:_id/exercises", async(req, res) =>{
+  try {
+    const user = await User.findById(req.body._id);
+    if (!user){
+       return res.json({error:"user doesn't exist"});
+    }else{  
+    const newExerc = await Exerc.create({
+      username:user.username,
+      description:req.body.description,
+      duration: req.body.duration, 
+      date: (req.body.date)? new Date(req.body.date) : new Date()
+      _id : req.body._id
+      });
+    };  
+
+    return res.json({
+      username:user.username,
+      date: newExerc.date.toDateString(),
+      duration: Number(newExerc.duration),
+      description:newExerc.description,
+      _id:user._id
+    });
+  } catch (error) {
+    console.error(error);
+    return res.json({error:"Operation failed"});
   };
-
-  let theUser = await User.findById(userId); 
- 
-  const newExerc = new Exerc({
-    username: theUser.username, 
-    description: exeDescri, 
-    duration: Number(exeDurat),
-    date : exeDate,
-    _id: userId, 
-  });
-
-  await newExerc.save();
-
-  res.json({
-    _id: theUser._id,
-    username: theUser.username,
-    description: newExerc.description,
-    duration: newExerc.duration,
-    date: newExerc.date.toDateString(),
-  });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.get("/api/users/:_id/logs", async(req, res)=>{
   try {
