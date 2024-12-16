@@ -115,4 +115,3 @@ app.get( "/api/users/:_id/logs?", async (req, res) => {
     log
   })
 });
-
