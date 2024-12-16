@@ -4,6 +4,7 @@ const app = express();
 const cors = require('cors');
 const mongo = require('mongodb');
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -20,18 +21,18 @@ const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 });
 
-let exercSesSchema = new mongoose.Schema({
+let exercSesSchema = new Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: String 
 });
 
-let usSchema = new mongoose.Schema({
+let usSchema = new Schema({
   username: {type: String, required:true },
   log: [exercSesSchema]
 });
 
-let Sess = mongoose.model( "Session", exercSesSchema);
+let Session = mongoose.model( "Session", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
 
 // app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (req, res) =>{
@@ -55,7 +56,7 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post( "/api/users/:_id/exercises",  (req, res) => {
+app.post( "/api/users/:_id/exercises", async (req, res) => {
   const usId = req.params._id;
   const { description, duration, date} = req.body;
 
@@ -64,7 +65,7 @@ app.post( "/api/users/:_id/exercises",  (req, res) => {
     if( !user){
       res.send( "User not find");
     } else{
-      const exercNew = new Sess({
+      const exercNew = new Session({
         usId: user._id,
         description,
         duration,
@@ -103,7 +104,7 @@ app.get( "/api/users/:_id/logs?", async (req, res) => {
   if( from || to){
     filter.date = dateObj;
   }
-  const exercises = await Sess.find(filter).limit(.limit ?? 500);
+  const exercises = await Session.find(filter).limit(-limit ?? 500);
   const log = exercises.map( e=> ({
     description: e.description,
     duration: e.duration,
