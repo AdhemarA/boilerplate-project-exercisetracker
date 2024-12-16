@@ -34,7 +34,8 @@ let usSchema = new mongoose.Schema({
 let Sess = mongoose.model( "Session", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
 
-app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (req, res) =>{
+// app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (req, res) =>{
+ app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{ 
   let newUser = new User({username: req.body.username});
   newUser.save(( error, savUser ) => {
     if(!error){
@@ -46,7 +47,7 @@ app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (re
   });
 });
 
-app.get( "/api/exercise/users", (req, res) => {
+app.get( "/api/users", (req, res) => {
   User.find({}, (error, usersArr) =>{
     if(!error){
       res.json( usersArr);
@@ -54,7 +55,7 @@ app.get( "/api/exercise/users", (req, res) => {
   });
 });
 
-app.post( "/api/exercise/add", bodyParser.urlencoded({extended:false}), (req, res) => {
+app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
   let newSess = new sessionStorage({
     description: req.body.description,
     duration: parseInt( req.body.druration),
@@ -79,7 +80,7 @@ app.post( "/api/exercise/add", bodyParser.urlencoded({extended:false}), (req, re
   }); 
 });
 
-app.get( "/api/exercise/log", (req, res) => {
+app.get( "/api/users/:_id/logs?", (req, res) => {
   User.findById(req.query.userId, (error, result) =>{
     if(!error){
       let respObj = result;
