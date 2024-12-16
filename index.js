@@ -55,7 +55,7 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post( "/api/users/:_id/exercises", async (req, res) => {
+/*app.post( "/api/users/:_id/exercises", async (req, res) => {
   const usId = req.params._id;
   const { description, duration, date} = req.body;
 
@@ -82,8 +82,32 @@ app.post( "/api/users/:_id/exercises", async (req, res) => {
     console.log( err);
     res.send( "Error saving exercise");
   };
+  });*/
+  app.post( "/api/users/:_id/exercises", bodyParser.urlencoded({extended:false}), (req, res) => {
+    let newSess = new Session({
+      description: req.body.description,
+      duration: parseInt( req.body.duration),
+      date: req.body.date
+    });
+    if(newSess.date ===""){
+      newSess.date = new Date().toDateString().substring(0, 10);
+    };
+    User.findByIdAndUpdate(req.body._id,
+      {$push: {log: newSess}},
+      {new:true},
+      (error,updUser) => {
+        if(!error){
+        let respObj = {};
+        respObj["_id"]=updUser._id;;
+        respObj["username"]=updUser.username;
+        respObj["date"]=new Date(newSess.date).toDateString();
+        respObj["description"]=newSess.description;
+        respObj["duration"]=newSess.duration;
+        res.json( respObj );
+      };
+    }); 
   });
-
+  
 app.get( "/api/users/:_id/logs?", async (req, res) => {
   const{ from, to, limit } = req.query;
   const id = req.params._id;
