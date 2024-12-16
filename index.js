@@ -32,6 +32,7 @@ let exercSesSchema = new mongoose.Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: { type: String,required:false },
+  userId: {type: String, required:true}
 });
 
 let usSchema = new mongoose.Schema({
@@ -62,31 +63,41 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post("/api/users/:_id/exercises", async(req, res) =>{
-  try {
-    const user = await User.findById(req.body[":_id"] || req.params._id);
-    if (!user){
-       return res.json({error:"user doesn't exist"});
-    }else{  
-    const newExerc = await Exerc.create({
-      username:user.username,
-      description:req.body.description,
-      duration: req.body.duration, 
-      date: (req.body.date)? new Date(req.body.date) : new Date()
-      });
-    };  
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  const userId = req.params._id; 
+  
+  let { description, duration, date } = req.body; 
 
-    return res.json({
-      _id:user._id,
-      username:user.username,
-      date: newExerc.date.toDateString(),
-      duration: newExerc.duration,
-      description:newExerc.description,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.json({error:"Operation failed"});
+  if (!date) {
+      date = (new Date(Date.now())).toDateString();
+  } else {
+      const parts = date.split('-');
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+      const utcDate = new Date(Date.UTC(year, month, day));
+      date =  new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000).toDateString();
   };
+
+  let theUser = await User.findById(userId); 
+ 
+  const newExerc = new Exerc({
+    username: theUser.username, 
+    description, 
+    duration: Number(duration),
+    date,
+    userId: userId, 
+  });
+
+  await newExerc.save();
+
+  res.json({
+    _id: theUser._id,
+    username: theUser.username,
+    description: newExerc.description,
+    duration: newExerc.duration,
+    date: newExerc.date.toDateString(),
+  });
 });
 
 app.get("/api/users/:_id/logs", async(req, res)=>{
@@ -109,7 +120,7 @@ app.get("/api/users/:_id/logs", async(req, res)=>{
      };
 
     if (req.query.to){
-      to = new Date (req.query.to+"T00:00:00.000-06:00");
+      to = new Date (req.query.to + "T00:00:00.000-06:00");
       consult.date = {...consult.date, $lte:to};
       result.to = to.toDateString();
      };
@@ -132,6 +143,19 @@ app.get("/api/users/:_id/logs", async(req, res)=>{
   };
 
 });
+const checkDate = (date) => {
+  if (!date) {
+      return (new Date(Date.now())).toDateString();
+  } else {
+      const parts = date.split('-');
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+
+      const utcDate = new Date(Date.UTC(year, month, day));
+      return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000).toDateString();
+  }
+}
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
