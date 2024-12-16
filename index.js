@@ -4,7 +4,6 @@ const app = express();
 const cors = require('cors');
 const mongo = require('mongodb');
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoDbURI = 'mongodb+srv://aahborgesnogueira:dBJZnb3UNbMqcMho@cluster0.6qowl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -21,13 +20,14 @@ const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 });
 
-let exercSesSchema = new Schema({
+let exercSesSchema = new mongoose.Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
-  date: String 
+  date: String,
+  count: Number
 });
 
-let usSchema = new Schema({
+let usSchema = new mongoose.Schema({
   username: String },
 );
 
