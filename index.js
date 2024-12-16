@@ -24,7 +24,6 @@ let exercSesSchema = new mongoose.Schema({
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: String,
-  count: Number
 });
 
 let usSchema = new mongoose.Schema({
@@ -34,17 +33,17 @@ let usSchema = new mongoose.Schema({
 let Session = mongoose.model( "Session", exercSesSchema);
 let User = mongoose.model( "User", usSchema);
 
-// app.post( "/api/exercise/new-user", bodyParser.urlencoded({extended:false}), (req, res) =>{
- app.post( "/api/users", async (req, res) =>{ 
+app.post( "/api/users", bodyParser.urlencoded({extended:false}), (req, res) =>{
+// app.post( "/api/users", async (req, res) =>{ 
   let newUser = new User({username: req.body.username});
-  try{
-    const user = await newUser.save();
-    console.log(user);
-    res.json( user );
-
-  }catch(err){
-    console.log( err);
-  }
+  newUser.save((error, savedUser) =>{
+    if(!error){
+      let respObj = {};
+      respObj["username"]= savedUser.username;
+      respObj["_id"]= savedUser.id;
+      respObj.json( respObj);
+    }
+  })
 });
 
 app.get( "/api/users", (req, res) => {
