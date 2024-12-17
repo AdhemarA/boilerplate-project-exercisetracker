@@ -79,14 +79,19 @@ app.post("/api/users/:_id/exercises", (req, res) =>{
       console.log( err);
       return;
     }; 
+    }); 
 
- // newExerc.save();
-    newExerc.findByIdAndUpdate( userId, newExerc, { new:true,upsert:true}, (error,updUser) => {
-      if(!error){
-       respObj["_id"]=updUser._id;;
-       res.json( newExerc );
-      };
-    });
+   newExerc.findById( userId, (err, exeFound) =>{
+    if(err){
+      console.log( err);
+      return;
+    }else{
+
+    }; 
+
+
+ newExerc.save();
+    n
   });   
 });
 
