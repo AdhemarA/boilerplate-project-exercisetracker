@@ -28,7 +28,6 @@ app.get('/', (req, res) => {
 });
 
 let exercSesSchema = new mongoose.Schema({
-  username: {type: String, required:true},
   description: { type: String, required:true},
   duration:{ type: Number,required:true },
   date: { type: String,required:false },
@@ -63,61 +62,35 @@ app.get( "/api/users", (req, res) => {
   });
 });
 
-app.post("/api/users/:_id/exercises", async(req, res) =>{
-  try {
-    const user = await User.findById(req.body._id);
-    if (!user){
-       return res.json({error:"user doesn't exist"});
-    }else{  
-    const newExerc = await Exerc.create({
-      username:user.username,
-      description:req.body.description,
-      duration: req.body.duration, 
-      date: (req.body.date)? new Date(req.body.date) : new Date(),
-      _id : req.body._id
-      });
-    };  
+app.post("/api/users/:_id/exercises", (req, res) =>{
+  let userId = req.params._id;
 
-    return res.json({
-      username:user.username,
-      date: newExerc.date.toDateString(),
-      duration: Number(newExerc.duration),
-      description:newExerc.description,
-      _id:user._id
-    });
-  } catch (error) {
-    console.error(error);
-    return res.json({error:"Operation failed"});
+  let exerObj = {
+    description:req.body.description,
+    duration: req.body.duration, 
+    _id: userId,
   };
+
+  if( req.body.date != ''){
+    exerObj.date = req.body.date;
+  };
+
+  let newExerc = new Exerc( exerObj);
+
+  User.findById( userId, (err, userFound) =>{
+    if(err) console.log( err);
+
+    newExerc.save();
+    
+    res.json({
+      _id: userFound._id,
+      username: userFound.username,
+      description: newExerc.description,
+      duration: newExerc.duration,
+      date: newExerc.date.toDateString()
+  });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+});
 
 app.get("/api/users/:_id/logs", async(req, res)=>{
   try {
