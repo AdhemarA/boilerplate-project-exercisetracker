@@ -63,32 +63,31 @@ app.post("/api/users/:_id/exercises", (req, res) =>{
   if( req.body.date != ''){
     exercDate = req.body.date;
   } else{
-    exercDate = new Date();
+    exercDate.date = new Date().toDateString().substring(0, 10);
   };
 
   let exerObj = {
     description:req.body.description,
     duration: req.body.duration, 
-    date: exercDate.toDateString(),
-    _id: userId,
-    
+    date: exercDate,
   };
 
   let newExerc = new Exerc( exerObj);
 
   User.findById( userId, (err, userFound) =>{
-    if(err) console.log( err);
+    if(err){
+      console.log( err);
+      return;
+    }; 
 
-    newExerc.save();
-
-    res.json({
-      _id: userFound._id,
-      username: userFound.username,
-      description: newExerc.description,
-      duration: newExerc.duration,
-      date: newExerc.date,
-  });
-});
+ // newExerc.save();
+    newExerc.findByIdAndUpdate( userId, newExerc, { new:true,upsert:true}, (error,updUser) => {
+      if(!error){
+       respObj["_id"]=updUser._id;;
+       res.json( newExerc );
+      };
+    });
+  });   
 });
 
 app.get("/api/users/:_id/logs", async(req, res)=>{
