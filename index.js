@@ -17,12 +17,6 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended:false}));
 
-function logexe(req, res, next){
-  console.log(req.method, req.path, req.params, req.query, req.body);
-  next();
-}
-app.use(logexe);
-
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
@@ -64,15 +58,20 @@ app.get( "/api/users", (req, res) => {
 
 app.post("/api/users/:_id/exercises", (req, res) =>{
   let userId = req.params._id;
+  let exercDate = "";
+
+  if( req.body.date != ''){
+    exercDate = req.body.date;
+  } else{
+    exercDate = new Date();
+  };
 
   let exerObj = {
     description:req.body.description,
     duration: req.body.duration, 
+    date: exercDate.toDateString(),
     _id: userId,
-  };
-
-  if( req.body.date != ''){
-    exerObj.date = req.body.date;
+    
   };
 
   let newExerc = new Exerc( exerObj);
@@ -87,7 +86,7 @@ app.post("/api/users/:_id/exercises", (req, res) =>{
       username: userFound.username,
       description: newExerc.description,
       duration: newExerc.duration,
-      date: newExerc.date.toDateString(),
+      date: newExerc.date,
   });
 });
 });
