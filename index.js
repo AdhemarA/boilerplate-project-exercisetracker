@@ -81,13 +81,13 @@ app.post("/api/users/:_id/exercises", (req, res) =>{
     if(err) console.log( err);
 
     newExerc.save();
-    
+
     res.json({
       _id: userFound._id,
       username: userFound.username,
       description: newExerc.description,
       duration: newExerc.duration,
-      date: newExerc.date.toDateString()
+      date: newExerc.date.toDateString(),
   });
 });
 });
